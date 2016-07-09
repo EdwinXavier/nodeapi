@@ -5,8 +5,20 @@ var express = require('express')
 	endPoint = require('./app/model/model')
 	url = 'mongodb://127.0.0.1:27017/test';
 
-var options = { server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } }, 
-                replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS : 30000 } } };
+var options = { 
+	server: { 
+		socketOptions: { 
+			keepAlive: 300000, 
+			connectTimeoutMS: 30000 
+		} 
+	}, 
+	replset: { 
+		socketOptions: { 
+			keepAlive: 300000, 
+			connectTimeoutMS : 30000 
+		} 
+	} 
+};
 
 
 mongoose.connect(url, options);
@@ -34,7 +46,12 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res) {
-	res.json({message: 'HELLO WORLD'});
+	res.json([
+		{
+			'message': 'HELLO SIR',
+			'statusCode': 200
+		}
+	]);
 });
 
 router.route('/data')
@@ -47,10 +64,16 @@ router.route('/data')
 		data.name = req.body.name
 
 		data.save(function(err) {
-			if(err)
-			res.send(err);
-
-			res.json({message: 'Data created!' });
+			if(err) 
+			res.json({
+				"message": 'Data not created!',
+				"statusCode": 301
+			});
+				
+			res.json({
+				"message": 'Data created!',
+				"statusCode": 200
+			});
 		})
 	})
 
@@ -60,9 +83,21 @@ router.route('/data')
 	.get(function(req, res) {
 		endPoint.find(function(err, list) {
 			if(err)
-			res.send(err);
+			res.json({
+				"message": 'Data cannot be fetched!',
+				"statusCode": 301
+			});
 
-			res.json(list);		
+			if(list.lenght === 0) {
+				res.json({
+					"message": 'No data available!',
+					"statusCode": 200
+				});
+			} else {
+				res.json(list, {
+					"statusCode": 200
+				});
+			}		
 		})	
 	})
 
@@ -74,7 +109,10 @@ router.route('/data/:data_id')
 	.get(function(req, res) {
 		endPoint.findById(req.params.data_id, function(err, data) {
 			if(err)
-			res.send(err);
+			res.json({
+				"message": 'No data is associated with this Id',
+				"statusCode": 404
+			});
 	
 			res.json(data);
 		})
@@ -86,15 +124,24 @@ router.route('/data/:data_id')
 	.put(function(req, res) {
 		endPoint.findById(req.params.data_id, function(err, newData) {
 			if(err)
-			res.send(err);
+			res.json({
+				"message": 'Error occured!',
+				"statusCode": 404
+			});
 		
 			newData.name = req.body.name;
 
 			newData.save(function(err) {
 				if(err)
-				res.send(err);
+				res.json({
+					"message": 'Try again later!',
+					"statusCode": 301
+				});
 
-				res.json({message: 'Data updated successfully!'});			
+				res.json({
+					"message": 'Data updated successfully!',
+					"statusCode": 200
+				});			
 			})		
 		})	
 	})
@@ -105,9 +152,15 @@ router.route('/data/:data_id')
 	.delete(function(req, res) {
 		endPoint.remove({_id: req.params.data_id}, function(err, data) {
 			if(err)
-			res.send(err);
+			res.json({
+				"message": 'Error occured!',
+				"statusCode": 301
+			});
 		
-			res.json({message: 'Data deleted successfully'});		
+			res.json({
+				"message": 'Data deleted successfully!',
+				"statusCode": 200
+			});		
 		})	
 	})
 
